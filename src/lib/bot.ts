@@ -16,7 +16,7 @@ function createState() {
 async function handleMessage(thread: Thread, message: Message, kind: string): Promise<void> {
   const userText = message.text?.trim();
   
-  console.log("[arodya-chat] Received message:",message);
+  console.log("[arodya-chat] Received message:",message,kind);
   
   if (!userText) return;
 
