@@ -24,13 +24,23 @@ async function handleMessage(thread: Thread, message: Message, kind: string): Pr
 
   console.log("[arodya-chat] Received message after:", { msg: userText, platform, kind });
 
+  if (!process.env.OPENAI_API_KEY) {
+    console.error("[arodya-chat] OPENAI_API_KEY is not set — cannot generate reply");
+    await thread.post("Hi! Our team will get back to you shortly. Visit https://arodya.com/intake to start your case.");
+    return;
+  }
+
   try {
+    const ac = new AbortController();
+    const timeout = setTimeout(() => ac.abort(), 45_000);
     const { text } = await generateText({
       model: openai("gpt-4o"),
       system: SYSTEM_PROMPT,
       prompt: `Platform: ${platform}\n\nUser message: ${userText}`,
       maxTokens: 400,
+      abortSignal: ac.signal,
     });
+    clearTimeout(timeout);
 
     console.log(`[arodya-chat] AI reply ready (${text.length} chars), posting to thread…`);
     await thread.post(text);
