@@ -15,13 +15,13 @@ function createState() {
 
 async function handleMessage(thread: Thread, message: Message, kind: string): Promise<void> {
   const userText = message.text?.trim();
-  
-  console.log("[arodya-chat] Received message:",message,kind);
-  
-  if (!userText) return;
-
   const platform: string =
     (message.raw as { platform?: string }).platform ?? "unknown";
+
+  console.log("[arodya-chat] Received message:", { msg: userText, platform, kind });
+
+  if (!userText) return;
+
 
   console.log(`[arodya-chat] handleMessage called — platform=${platform} text="${userText.slice(0, 60)}" kind="${kind}"`);
 
@@ -41,7 +41,7 @@ async function handleMessage(thread: Thread, message: Message, kind: string): Pr
     try {
       await thread.post(
         "Hi! Thanks for reaching out to Arodya. Our team will get back to you shortly. " +
-          "To start your medical journey now, visit https://arodya.com/intake"
+        "To start your medical journey now, visit https://arodya.com/intake"
       );
     } catch (postErr) {
       console.error("[arodya-chat] fallback thread.post() also failed:", postErr);
