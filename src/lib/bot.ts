@@ -18,17 +18,7 @@ async function handleMessage(thread: Thread, message: Message, kind: string): Pr
   const platform: string =
     (message.raw as { platform?: string }).platform ?? "unknown";
 
-  console.log("[arodya-chat] Received message:", { msg: userText, platform, kind });
-
   if (!userText) return;
-
-  console.log("[arodya-chat] Received message after:", { msg: userText, platform, kind });
-
-  if (!process.env.OPENAI_API_KEY) {
-    console.error("[arodya-chat] OPENAI_API_KEY is not set — cannot generate reply");
-    await thread.post("Hi! Our team will get back to you shortly. Visit https://arodya.com/intake to start your case.");
-    return;
-  }
 
   try {
     const ac = new AbortController();
@@ -41,20 +31,12 @@ async function handleMessage(thread: Thread, message: Message, kind: string): Pr
       abortSignal: ac.signal,
     });
     clearTimeout(timeout);
-
-    console.log(`[arodya-chat] AI reply ready (${text.length} chars), posting to thread…`);
     await thread.post(text);
-    console.log("[arodya-chat] thread.post() completed");
   } catch (err) {
-    console.error("[arodya-chat] AI generation failed:", err);
-    try {
-      await thread.post(
-        "Hi! Thanks for reaching out to Arodya. Our team will get back to you shortly. " +
-        "To start your medical journey now, visit https://arodya.com/intake"
-      );
-    } catch (postErr) {
-      console.error("[arodya-chat] fallback thread.post() also failed:", postErr);
-    }
+    await thread.post(
+      "Hi! Thanks for reaching out to Arodya. Our team will get back to you shortly. " +
+      "To start your medical journey now, visit https://arodya.com/intake"
+    );
   }
 }
 
