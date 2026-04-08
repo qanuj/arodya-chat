@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+
+# Environment files — NEVER commit these
+.env
+.env.local
+.env.*.local
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# ngrok config (may contain auth tokens)
+ngrok.yml
