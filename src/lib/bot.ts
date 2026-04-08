@@ -13,12 +13,17 @@ function createState() {
   return createMemoryState();
 }
 
-async function handleMessage(thread: Thread, message: Message): Promise<void> {
+async function handleMessage(thread: Thread, message: Message, kind: string): Promise<void> {
   const userText = message.text?.trim();
+  
+  console.log("[arodya-chat] Received message:",message);
+  
   if (!userText) return;
 
   const platform: string =
     (message.raw as { platform?: string }).platform ?? "unknown";
+
+  console.log(`[arodya-chat] handleMessage called — platform=${platform} text="${userText.slice(0, 60)}" kind="${kind}"`);
 
   try {
     const { text } = await generateText({
@@ -28,13 +33,19 @@ async function handleMessage(thread: Thread, message: Message): Promise<void> {
       maxTokens: 400,
     });
 
+    console.log(`[arodya-chat] AI reply ready (${text.length} chars), posting to thread…`);
     await thread.post(text);
+    console.log("[arodya-chat] thread.post() completed");
   } catch (err) {
     console.error("[arodya-chat] AI generation failed:", err);
-    await thread.post(
-      "Hi! Thanks for reaching out to Arodya. Our team will get back to you shortly. " +
-        "To start your medical journey now, visit https://arodya.com/intake"
-    );
+    try {
+      await thread.post(
+        "Hi! Thanks for reaching out to Arodya. Our team will get back to you shortly. " +
+          "To start your medical journey now, visit https://arodya.com/intake"
+      );
+    } catch (postErr) {
+      console.error("[arodya-chat] fallback thread.post() also failed:", postErr);
+    }
   }
 }
 
@@ -60,17 +71,17 @@ export function getBot(): Chat {
 
   // Handle all DMs (Instagram DMs, WhatsApp, Telegram, Facebook Messenger, etc.)
   _bot.onDirectMessage(async (thread, message) => {
-    await handleMessage(thread, message);
+    await handleMessage(thread, message, "direct_message");
   });
 
   // Handle @mentions and comments (Instagram comments, X/Twitter replies, etc.)
   _bot.onNewMention(async (thread, message) => {
-    await handleMessage(thread, message);
+    await handleMessage(thread, message, "mention");
   });
 
   // Catch-all: any message matching any text
   _bot.onNewMessage(/.+/, async (thread, message) => {
-    await handleMessage(thread, message);
+    await handleMessage(thread, message, "new_message");
   });
 
   return _bot;

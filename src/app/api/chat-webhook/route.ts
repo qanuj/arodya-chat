@@ -8,8 +8,14 @@ export const maxDuration = 60;
 // The adapter handles signature verification (ZERNIO_WEBHOOK_SECRET) and dispatches
 // the event to the handlers defined in src/lib/bot.ts.
 export async function POST(request: Request): Promise<Response> {
-  const response = getBot().webhooks.zernio(request);
-  // Keep the serverless function alive until the bot finishes sending the reply.
-  waitUntil(response);
+  // webhooks.zernio() may fire message handlers asynchronously after returning.
+  // We await it fully here so the fn stays alive for the entire handler chain
+  // (gpt-4o call + thread.post). maxDuration = 60 gives us the budget.
+  const response = await getBot().webhooks.zernio(request);
+
+  // Safety net: if the SDK fires handlers after the response resolves,
+  // waitUntil keeps the function alive for any remaining async work.
+  waitUntil(Promise.resolve());
+
   return response;
 }
