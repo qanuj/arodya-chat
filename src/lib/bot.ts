@@ -22,9 +22,6 @@ async function handleMessage(thread: Thread, message: Message, kind: string): Pr
 
   if (!userText) return;
 
-
-  console.log(`[arodya-chat] handleMessage called — platform=${platform} text="${userText.slice(0, 60)}" kind="${kind}"`);
-
   try {
     const { text } = await generateText({
       model: openai("gpt-4o"),
