@@ -1,22 +1,17 @@
 import { Chat, type Thread, type Message } from "chat";
 import { createZernioAdapter } from "@zernio/chat-sdk-adapter";
 import { createMemoryState } from "@chat-adapter/state-memory";
+import { createRedisState } from "@chat-adapter/state-redis";
 import { generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
+import { SYSTEM_PROMPT } from "./system-prompt";
 
-const SYSTEM_PROMPT = `You are the Arodya assistant — a warm, knowledgeable guide for African patients exploring medical treatment in India.
-
-Arodya is a medical travel facilitation platform. We help patients navigate hospitals, specialists, and logistics for treatment in India. We are NOT a hospital.
-
-Your role:
-- Answer questions about treatments, hospitals, and cities we work with in India
-- Guide patients through the process: initial inquiry → case creation → hospital match → travel
-- Be empathetic, clear, and patient-first — never use medical jargon without explaining it
-- For serious clinical questions, always recommend they speak with a doctor
-- To start a formal case, direct patients to: https://arodya.com/intake
-- Keep responses concise and conversational — this is social media, not email
-
-Tone: Trustworthy, warm, direct. No clickbait, no pressure.`;
+function createState() {
+  const redisUrl = process.env.REDIS_URL;
+  if (redisUrl) return createRedisState({ url: redisUrl });
+  console.warn("[arodya-chat] REDIS_URL not set — using in-memory state (dev only)");
+  return createMemoryState();
+}
 
 async function handleMessage(thread: Thread, message: Message): Promise<void> {
   const userText = message.text?.trim();
@@ -53,7 +48,7 @@ export function getBot(): Chat {
 
   _bot = new Chat({
     userName: botName,
-    state: createMemoryState(),
+    state: createState(),
     adapters: {
       zernio: createZernioAdapter({
         apiKey: process.env.ZERNIO_API_KEY!,
