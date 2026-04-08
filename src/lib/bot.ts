@@ -69,6 +69,10 @@ export function getBot(): Chat {
     },
   });
 
+  // Register as the singleton so the Zernio adapter can route messages
+  // to these handlers via Chat.getSingleton() internally.
+  _bot.registerSingleton();
+
   // Handle all DMs (Instagram DMs, WhatsApp, Telegram, Facebook Messenger, etc.)
   _bot.onDirectMessage(async (thread, message) => {
     await handleMessage(thread, message, "direct_message");
